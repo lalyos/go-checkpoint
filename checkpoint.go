@@ -9,8 +9,10 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	mrand "math/rand"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -87,6 +89,7 @@ type CheckAlert struct {
 
 // Check checks for alerts and new version information.
 func Check(p *CheckParams) (*CheckResponse, error) {
+	log.Printf("[HACK] v0.10 checkpoint:Check: %#v", *p)
 	if disabled := os.Getenv("CHECKPOINT_DISABLE"); disabled != "" {
 		return &CheckResponse{}, nil
 	}
@@ -136,7 +139,12 @@ func Check(p *CheckParams) (*CheckResponse, error) {
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("User-Agent", "HashiCorp/go-checkpoint")
 
+	reqb, err := httputil.DumpRequestOut(req, true)
+	log.Println("[REQ] ===> ", string(reqb))
 	resp, err := http.DefaultClient.Do(req)
+	respb, err := httputil.DumpResponse(resp, true)
+	log.Println("[RESP] ===> ", string(respb))
+
 	if err != nil {
 		return nil, err
 	}
